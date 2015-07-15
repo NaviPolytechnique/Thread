@@ -1,0 +1,133 @@
+				********************
+				**   Tuto threads ** 
+				********************
+
+
+Mots clés : thread, pthread, runnable, concurrence
+
+
+
+//——————————Un thread ? Qu’est-ce que c’est ?——————————————————//
+
+
+Des threads sont des processus, des morceaux de code qui s’éxecutent en parallèle, c’est-à-dire en même temps. 
+La notion de simultanéité est relative. Le nombre de threads qui peuvent tourner au même moment ne peut pas excéder le nombre de processeurs de la machine. Si plus de threads sont lancés que la machine n’a de processeur, le système d’exploitation se charge de partager les ressources des processeurs. Un thread tournera sur un processeur pendant un intervalle dt, cèdera sa place à un autre, reviendra pour continuer son execution…
+Lorsqu’un thread termine (ie il n’y a plus de ligne à interpréter), on dit qu’il meurt. Un thread peut aussi être permanent s’il doit exécuter une boucle infinie (exemple : un thread qui vérifie la charge de la batterie à intervalle de temps régulier).
+
+
+//———————————————Pourquoi des threads ?————————————————-//
+
+Tout simplement pour exécuter plusieurs actions au même moment. On voudra par exemple être capable de vérifier l’état de la batterie en même temps que l’on interprète des informations de la platine inertielle, en même temps qu’on traite un message envoyé depuis la terre.
+
+
+
+
+//—————————-Comment fonctionne les threads en C++—————//
+
+C++ est « moins prévu » pour la programmation parallèle que JAVA. Il existe différentes librairies implémentant les threads : la libraire de C++ 11, la librairie Boost… La chose qu’elles ont en commun est qu’elle sont une sorte d’interface entre le programmeur et les threads des systèmes POSIX (Linux, Mac OS, Windows sont des systèmes UNIX qui fait partie de POSIX), les pthreads. Le problème est que les possibilités offertes par les pthreads en terme de gestion du planning d’éxecution sont totalement oubliées par ces librairies. Nous en aurons besoin pour le temps réel notamment (il est plus urgent d’allouer de la ressource CPU au thread qui s’occupe de stabiliser le drone qu’au thread qui contrôle une batterie chargée à 90 %).
+
+Nous utiliserons donc directement les pthreads. La différence entre les threads en C++ et en JAVA est notable : en JAVA, un thread peut prendre en argument un objet Runnable et lancer sa méthode run(). Ainsi, lorsque le thread s’exécute il peut directement modifier les paramètres de l’objet Runnable (de la POO quoi !).
+Ce n’est pas possible de base avec les pthreads. Lorsque l’on crée un pthread, celui-ci ne peut prendre en argument qu’un pointeur vers une fonction et un unique argument pour cette fonction. ( la dèche quoi…).
+
+Heureusement le greg a travaillé et a réimplémenté les classes Thread et Runnable de JAVA (en tout cas le nécessaire). Nous passerons par ces classes pour lancer des threads.
+
+
+//—————Comment fonctionnent ces classes ?—————//
+
+D’abord, les headers : #include « Thread.h » 
+		       #include « Runnable.h »
+
+Pour créer une classe implémentant Runnable, ce n’est pas compliqué : 
+
+class maClasse : public Runnable {}
+
+Cette classe doit obligatoirement posséder : son destructeur et sa méthode void* run().
+
+
+
+
+on créer un thread avec le constructeur :
+
+Thread(auto_ptr<Runnable> runnable_, bool detached, (optionnel) Thread::sched_policy policy_, int priority);
+
+	*auto_ptr<Runnable> runnable_ : c’est un pointeur vers un objet de type runnable (auto_ptr pour des raisons de mémoire lors de la mort de thread.) Pour créer un auto_ptr à partir d’un pointeur a :  auto_ptr(a).
+
+	*bool detached : true si notre thread est joinable, false sinon.
+
+	* Thread::sched_policy policy_ : argument optionnel, peut prendre 3 valeurs. La policy concerne l’allocation des ressources CPU entre les threads qui ont la même priorité (FIFO, RR, OTHER par défaut).    
+
+	    FIFO (lorsqu’il est pris en compte par un processeur, ce thread est exécuté de A à Z, il ne partage pas le processeur avec quelqu’un d’autre.)
+	    RR : le thread s’éxecute pendant un petit dt, puis passe le processeur à un autre thread qui a la même priorité…
+	    OTHER: idem mais pas de notion de priorité.
+
+
+	* int priority : plus cet entier est grand, plus la priorité du thread est élevée. Le programme exécute d’abord les threads de haute priorité puis, seulement lorsqu’ils sont bloqués, endormis ou morts, ceux d’une priorité plus faible.
+
+
+
+
+
+Pour lancer un thread que l’on a crée on appelle la méthode start().
+
+
+
+Pour faire dormir un thread, on appelle la fonction sleep(secondes). Le thread laisse le processeur à d’autres et se réveille au bout du temps fixé. Il redemandera de l’attention et sera de nouveau exécuté lorsqu’il sera pris de nouveau en compte par un processeur.
+
+
+
+
+Pour attendre la fin de l’execution d’un autre thread: on appelle la méthode join() du thread que l’on attend dans le thread qui doit attendre. 
+
+
+//———————détaille des classes de test————//
+
+Les fichiers de test sont Agent.cpp/h, Compteur.cpp/h, main.cpp.
+
+Un agent prend en argument un pointeur vers un compteur. C’est un objet runnable dont la méthode run incrémente le compteur. Chaque runnable est lancé dans un thread.
+
+
+La méthode main crée 20 compteurs qu’elle associe chacun à un agent qui l’incrémente jusqu’à 20 et fait un print à chaque étape. Manipuler le constructeur du thread est un bon moyen avec les print de comprendre comment fonctionnent les priorités/policy.
+
+
+De toute façon, ces notions de priorités ne sont pas importantes pour le moment, elles sont en rapport à l’architecture globale du code. Manipuler des threads en utilisant le constructeur : Thread(auto_ptr<Runnable> runnable_, bool detached) est très bien pour le moment.
+
+———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+Voilà un peu tout. Le fonctionnement général n’est pas très compliqué. Il faut retenir 
+* L’implémentation d’une classe runnable
+* Constructeur d’un thread
+* Thread::start()
+* Thread::join()
+
+
+La classe Thread est amenée à évoluer en fonction des besoins de l’architecture logicielle. Prochainement arrivera le fichier d’exceptions.
+
+
+————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+Pour aller plus loin, renseignez-vous sur la notion d’accès concurrents. Grosso modo, il faut faire très attention, différentes emmerdes peuvent arriver :
+
+*Plusieurs threads veulent lire et écrire ou écrire et écrire en même temps sur une même cas mémoire : cela peut foutre la merde.
+
+*Si un thread effectue plusieurs actions sur une variable partagée, celle-ci peut être modifiée au milieu des calculs par un autre threads => bug.
+
+Pour pallier à cela, il existe des objets appelés verrous/mutexes. Leur fonctionnement avec les pthreads est similaires à celui de java (avec les conditions, lock, unlock…).
+Je vous laisse vous renseigner sur ces notions (cf poly de programmation parallèle et distribuée).
+
+Vous pouvez regarder ce auto qui est bien foutu : 
+http://www.bogotobogo.com/cplusplus/multithreading_pthread.php
+
+Il y a une partie sur les mutexes.
+
+
+
+—————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+J’espère que ce tuto aura été assez clair. Il faut avouer que tout expliquer de manière synthétique à l’écrit n’est pas facile. N’hésitez pas à me contacter pour me dire que c’est de la merde si nécessaire.
+
+                        _,-%/%|
+                    _,-'    \//%\
+                _,-'        \%/|%
+              / / )    __,--  /%\
+              \__/_,-'%(%  ;  %)%
+                      %\%,   %\
+                        '--%'      
