@@ -25,54 +25,29 @@ private :
 
     pthread_t PthreadThreadID;
 
-
-
-    //auto_ptr sert à faire en sorte que l'objet runnable soit détruit lors de la destruction de l'objet thread
-
+    //auto_ptr sert à faire en sorte que l'objet runnable vers lequel pointe runnable soit détruit lors de la destruction de l'objet thread donc du pointeur runnable
     std::auto_ptr<Runnable> runnable;
-
-
-
 
     //IMPORTANT permet de dire si le thread est joinable ou pas (ie spécifier s'il est indépendant de tous les autres threads)
     //Il est efficace de déclarer un thread detached pour des raisons de mémoires.
-
     bool detached;
 
-
-
-
     //Variable contenant les attributs du pthread que l'on va lancer (detached/joinable, règles priorité...)
-
     pthread_attr_t threadAttribute;
 
-
-
-
     //Retranscrit la politique de priorité choisie (policy)
-
     struct sched_param priority;
-
 
 
     const Thread& operator = (const Thread&);
 
-
-
-
     //pointeur vers ce que retourne la méthode run() de l'objet runnable
-
     void* result;
-
 
 
     //Cette fonction est un intermédiaire au lancement du pthread
     //fonction static pour répondre aux exigences de la construction d'un pthread
-
     static void* startThread(void* pVoid);
-
-
-
 
 
     public :
@@ -80,36 +55,17 @@ private :
 
     enum sched_policy {FIFO, RR, OTHER};
 
-
-
-
     //Constructeur
-
     Thread(std::auto_ptr<Runnable> runnable_, bool isDetached = false, sched_policy policy=OTHER, int priority=0);
 
-
-
-
     //Destructeur
-
     virtual ~Thread();
 
-
-
-
     //Lancement du thread (le thread execute la méthode run() de l'objet runnable)
-
     void start();
 
-
-
-
     //Fonction join(). Le thread appelant attend la terminaison de ce thread.
-
     void* join();
-
-
-
 };
 
 

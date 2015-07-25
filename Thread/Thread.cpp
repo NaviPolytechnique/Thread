@@ -44,41 +44,43 @@ Thread::Thread(std::auto_ptr<Runnable> runnable_, bool isDetached, Thread::sched
 // des threads déjà existants, sinon, celle qui est spécifiée.
 // pas de priorité pour une "policy" SCHED_OTHER.
     if(policy_== FIFO){
+        status = pthread_attr_setinheritsched(&threadAttribute,PTHREAD_EXPLICIT_SCHED);
         status = pthread_attr_setschedpolicy(&threadAttribute, SCHED_FIFO);
+        std::cout <<"fifo"<<std::endl;
         if(status != 0){
             std::cout <<"Error setting policy"<<std::endl; exit(-1);
         }
 
         if(priority_!=0){
-        //priority.__sched_priority = priority_;
-            priority.sched_priority = priority_;
+        priority.__sched_priority = priority_;
         }else{
             int priority_max;
             int priority_min;
             priority_max= sched_get_priority_max(SCHED_FIFO);
             priority_min= sched_get_priority_min(SCHED_FIFO);
-            //priority.__sched_priority=(priority_max+priority_min)/2;
-            priority.sched_priority=(priority_max+priority_min)/2;
+            priority.__sched_priority=(priority_max+priority_min)/2;
 
         }
+        pthread_attr_setschedparam(&threadAttribute, &priority);
     }
     else if (policy_== RR){
+        status = pthread_attr_setinheritsched(&threadAttribute,PTHREAD_EXPLICIT_SCHED);
         status = pthread_attr_setschedpolicy(&threadAttribute, SCHED_RR);
             if(status != 0){
                 std::cout <<"Error setting policy"<<std::endl; exit(-1);
             }
             if(priority_!=0){
-        //priority.__sched_priority = priority_;
-                priority.sched_priority = priority_;
+        priority.__sched_priority = priority_;
         }else{
             int priority_max;
             int priority_min;
             priority_max= sched_get_priority_max(SCHED_RR);
             priority_min= sched_get_priority_min(SCHED_RR);
-            //priority.__sched_priority=(priority_max+priority_min)/2;
-            priority.sched_priority=(priority_max+priority_min)/2;
+            priority.__sched_priority=(priority_max+priority_min)/2;
 
         }
+        pthread_attr_setschedparam(&threadAttribute, &priority);
+
     }else{
         status = pthread_attr_setschedpolicy(&threadAttribute, SCHED_OTHER);
             if(status != 0){

@@ -11,10 +11,12 @@ Agent::Agent(Compteur *compte_){
 
 
 void* Agent::run(){
-    while((*compte).getcompte()<20){
+    while((*compte).getcompte()<1000000){
+	int i=0;
         compte->increment();
-        std::cout<< (*compte).getID() << ";" << (*compte).getcompte() << std::endl;
+        //std::cout<< (*compte).getID() << ";" << (*compte).getcompte() << std::endl;
     }
+
     return 0;
 }
 
