@@ -44,7 +44,7 @@ Thread::Thread(std::auto_ptr<Runnable> runnable_, bool isDetached, Thread::sched
 // des threads déjà existants, sinon, celle qui est spécifiée.
 // pas de priorité pour une "policy" SCHED_OTHER.
     if(policy_== FIFO){
-        status = pthread_attr_setinheritsched(&threadAttribute,PTHREAD_EXPLICIT_SCHED);
+        //status = pthread_attr_setinheritsched(&threadAttribute,PTHREAD_EXPLICIT_SCHED);
         status = pthread_attr_setschedpolicy(&threadAttribute, SCHED_FIFO);
         std::cout <<"fifo"<<std::endl;
         if(status != 0){
@@ -64,7 +64,7 @@ Thread::Thread(std::auto_ptr<Runnable> runnable_, bool isDetached, Thread::sched
         pthread_attr_setschedparam(&threadAttribute, &priority);
     }
     else if (policy_== RR){
-        status = pthread_attr_setinheritsched(&threadAttribute,PTHREAD_EXPLICIT_SCHED);
+        //status = pthread_attr_setinheritsched(&threadAttribute,PTHREAD_EXPLICIT_SCHED);
         status = pthread_attr_setschedpolicy(&threadAttribute, SCHED_RR);
             if(status != 0){
                 std::cout <<"Error setting policy"<<std::endl; exit(-1);
